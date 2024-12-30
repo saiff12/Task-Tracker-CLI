@@ -31,36 +31,75 @@ def addTask(desc):
     taskData[id]["status"] = "todo"
     taskData[id]["createdAt"] = currentDateTime
     taskData[id]["updatedAt"] = currentDateTime
-
     with open(TASKS_FILE, 'w') as json_file:
         json.dump(taskData, json_file)
-
     print("Task added successfully ID:", id)
 
 def updateTask(id,desc):
     taskData = load_tasks()
     currentDateTime = getDateTime()
-    taskKeys = taskData.keys()
-    if  len(taskKeys):
-        if id in taskKeys:
-            taskData[id]["desc"] = desc
-            taskData[id]["updatedAt"] = currentDateTime
-            with open(TASKS_FILE, 'w') as json_file:
-                json.dump(taskData, json_file)
-            print("Task id:",id,"updated successfully")
-        else:
-            print("Invalid task ID")
-    else:
-        print("No tasks to update, add a task first!")
+    try:
+        taskData[id]["desc"] = desc
+        taskData[id]["status"] = "todo"
+        taskData[id]["updatedAt"] = currentDateTime
+    except KeyError:
+        print('Invalid task ID:', id)
+        print("update failed")
+        return
+    with open(TASKS_FILE, 'w') as json_file:
+        json.dump(taskData, json_file)
+    print("Task id:",id,"updated successfully")
+    
 
-def deleteTask():
-        pass
+def deleteTask(id):
+    taskData = load_tasks()
+    try:
+        del taskData[id]
+    except KeyError:
+        print('Invalid task ID:', id)
+        print("delete failed")
+        return
+    with open(TASKS_FILE, 'w') as json_file:
+        json.dump(taskData, json_file)
+    print("Task id:",id,"deleted successfully")
+
 def updateTaskStatus(id,status):
-        pass
+    taskData = load_tasks()
+    currentDateTime = getDateTime()
+    try:
+        taskData[id]["status"] = status
+        taskData[id]["updatedAt"] = currentDateTime
+    except KeyError:
+        print("invalid task ID:", id)
+        print("update failed")
+        return
+    with open(TASKS_FILE, 'w') as json_file:
+        json.dump(taskData, json_file)
+    print("Task status updated successfully")
+
+def listTasks(tasks, status=None):
+    print("List of tasks:")
+    if status is None:
+        for key,value in tasks.items():
+            print("Task ID:", key)
+            print("Description:", value["desc"])
+            print("Status:", value["status"])
+            print("Created at:", value["createdAt"])
+            print("Updated at:", value["updatedAt"])
+            print()
+    else:
+        for key,value in tasks.items():
+            if value["status"] == status:
+                print("Task ID:", key)
+                print("Description:", value["desc"])
+                print("Status:", value["status"])
+                print("Created at:", value["createdAt"])
+                print("Updated at:", value["updatedAt"])
+                print()
 
 
 argsCount = len(sys.argv) 
-if argsCount == 1:
+if argsCount <= 1:
     print("enter a command through command line")
 else:
     arg1 = sys.argv[1] 
@@ -70,19 +109,16 @@ else:
         case "update":
             updateTask(sys.argv[2], sys.argv[3])
         case "delete":
-            pass
+            deleteTask(sys.argv[2])
         case "mark-in-progress":
-            pass
+            updateTaskStatus(sys.argv[2],"in-progress")
         case "mark-done":
-            pass
+            updateTaskStatus(sys.argv[2],"done")
         case "list":
             if argsCount == 2:
-                print(load_tasks())
+                print(listTasks(load_tasks()))
             elif argsCount == 3:
-                tasks = load_tasks()
-                for key, value in tasks.items():
-                    if (sys.argv[2] == value["status"]):
-                        print(key, value)
+                print(listTasks(load_tasks(), sys.argv[2]))
+        case _:
+            print("invalid action")
                     
-            
-             
